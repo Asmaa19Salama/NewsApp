@@ -118,19 +118,18 @@ public class QueryUtils {
                 String datePublished = currentNews.getString("webPublicationDate");
                 String url = currentNews.getString("webUrl");
 
-                News news;
-                if (currentNews.has("auther name")) {
-                    String autherName = currentNews.getString("auther name");
-                    news = new News(titleOfArticle, nameOfSection, datePublished, url, autherName);
-                } else {
-                    news = new News(titleOfArticle, nameOfSection, datePublished, url);
+                String autherName = "";
+                JSONArray tagsArray = currentNews.getJSONArray("tags");
+                for (int j = 0; j < tagsArray.length(); j++) {
+                    JSONObject currentTag = tagsArray.getJSONObject(j);
+                    autherName = currentTag.getString("webTitle");
                 }
-
+                News news = new News(titleOfArticle, nameOfSection, datePublished, url, autherName);
                 allNews.add(news);
             }
 
         } catch (JSONException e) {
-            Log.e("QueryUtils", "Problem parsing the earthquake JSON results", e);
+            Log.e("QueryUtils", "Problem parsing the news JSON results", e);
         }
         return allNews;
     }
