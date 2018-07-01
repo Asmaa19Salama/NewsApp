@@ -113,12 +113,19 @@ public class QueryUtils {
             for (int i = 0; i < newsArray.length(); i++) {
                 JSONObject currentNews = newsArray.getJSONObject(i);
 
-                String titleOfArticle = currentNews.getString("type");
+                String titleOfArticle = currentNews.getString("webTitle");
                 String nameOfSection = currentNews.getString("sectionName");
                 String datePublished = currentNews.getString("webPublicationDate");
                 String url = currentNews.getString("webUrl");
 
-                News news = new News(titleOfArticle, nameOfSection, datePublished, url);
+                News news;
+                if (currentNews.has("auther name")) {
+                    String autherName = currentNews.getString("auther name");
+                    news = new News(titleOfArticle, nameOfSection, datePublished, url, autherName);
+                } else {
+                    news = new News(titleOfArticle, nameOfSection, datePublished, url);
+                }
+
                 allNews.add(news);
             }
 
