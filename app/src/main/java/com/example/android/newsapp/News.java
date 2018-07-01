@@ -8,13 +8,6 @@ public class News {
     private String mUrl;
     private String mAutherName;
 
-    public News(String titleOfArticle, String nameOfSection, String datePublished, String url) {
-        mTitleOfArticle = titleOfArticle;
-        mNameOfSection = nameOfSection;
-        mDatePublished = datePublished;
-        mUrl = url;
-    }
-
     public News(String titleOfArticle, String nameOfSection, String datePublished, String url, String autherName) {
         mTitleOfArticle = titleOfArticle;
         mNameOfSection = nameOfSection;
