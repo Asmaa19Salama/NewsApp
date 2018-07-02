@@ -21,6 +21,9 @@ import java.util.List;
 public class QueryUtils {
 
     private static final String LOG_TAG = QueryUtils.class.getSimpleName();
+    private static int setReadTimeout = 10000;
+    private static int setConnectTimeout = 15000;
+    private static int getResponseCode = 200;
 
     private QueryUtils() {
     }
@@ -58,12 +61,12 @@ public class QueryUtils {
         InputStream inputStream = null;
         try {
             urlConnection = (HttpURLConnection) url.openConnection();
-            urlConnection.setReadTimeout(10000);
-            urlConnection.setConnectTimeout(15000);
+            urlConnection.setReadTimeout(setReadTimeout);
+            urlConnection.setConnectTimeout(setConnectTimeout);
             urlConnection.setRequestMethod("GET");
             urlConnection.connect();
 
-            if (urlConnection.getResponseCode() == 200) {
+            if (urlConnection.getResponseCode() == getResponseCode) {
                 inputStream = urlConnection.getInputStream();
                 jsonResponse = readFromStream(inputStream);
             } else {
@@ -113,16 +116,16 @@ public class QueryUtils {
             for (int i = 0; i < newsArray.length(); i++) {
                 JSONObject currentNews = newsArray.getJSONObject(i);
 
-                String titleOfArticle = currentNews.getString("webTitle");
-                String nameOfSection = currentNews.getString("sectionName");
-                String datePublished = currentNews.getString("webPublicationDate");
-                String url = currentNews.getString("webUrl");
+                String titleOfArticle = currentNews.optString("webTitle");
+                String nameOfSection = currentNews.optString("sectionName");
+                String datePublished = currentNews.optString("webPublicationDate");
+                String url = currentNews.optString("webUrl");
 
                 String autherName = "";
-                JSONArray tagsArray = currentNews.getJSONArray("tags");
+                JSONArray tagsArray = currentNews.optJSONArray("tags");
                 for (int j = 0; j < tagsArray.length(); j++) {
                     JSONObject currentTag = tagsArray.getJSONObject(j);
-                    autherName = currentTag.getString("webTitle");
+                    autherName = currentTag.optString("webTitle");
                 }
                 News news = new News(titleOfArticle, nameOfSection, datePublished, url, autherName);
                 allNews.add(news);
