@@ -4,11 +4,15 @@ import android.app.LoaderManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -18,9 +22,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NewsActivity extends AppCompatActivity
-        implements LoaderManager.LoaderCallbacks<List<News>> {
+        implements LoaderManager.LoaderCallbacks<List<News>>,
+        SharedPreferences.OnSharedPreferenceChangeListener {
 
-    private static final String REQUEST_URL = "https://content.guardianapis.com/search?&show-tags=contributor&api-key=a48f129c-2feb-4a6a-b030-8f43e6cd6bf1";
+    private static final String REQUEST_URL = "https://content.guardianapis.com/search?&show-tags=contributor&api-key=a48f129c-2feb-4a6a-b030-8f43e6cd6bf1" +
+            "&format=json";
+
     private static final int NEWS_LOADER_ID = 1;
     private NewsAdapter mAdapter;
     private TextView mEmptyStateTextView;
@@ -36,6 +43,9 @@ public class NewsActivity extends AppCompatActivity
         mAdapter = new NewsAdapter(this, new ArrayList<News>());
         newsListView.setAdapter(mAdapter);
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        prefs.registerOnSharedPreferenceChangeListener(this);
+
         newsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
@@ -50,7 +60,6 @@ public class NewsActivity extends AppCompatActivity
         });
 
         ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
 
         if (networkInfo != null && networkInfo.isConnected()) {
@@ -62,12 +71,43 @@ public class NewsActivity extends AppCompatActivity
 
             mEmptyStateTextView.setText(R.string.no_internet_connection);
         }
+    }
 
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+        if (key.equals(getString(R.string.settings_section_name_key))||
+                key.equals(getString(R.string.settings_order_by_key))){
+            mAdapter.clear();
+
+            mEmptyStateTextView.setVisibility(View.GONE);
+
+            View loadingIndicator = findViewById(R.id.loading_indicator);
+            loadingIndicator.setVisibility(View.VISIBLE);
+
+            getLoaderManager().restartLoader(NEWS_LOADER_ID, null, this);
+        }
     }
 
     @Override
     public Loader<List<News>> onCreateLoader(int i, Bundle bundle) {
-        return new NewsLoader(this, REQUEST_URL);
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String defName = sharedPrefs.getString(
+                getString(R.string.settings_section_name_key),
+                getString(R.string.settings_section_name_default));
+
+        String orderBy = sharedPrefs.getString(
+                getString(R.string.settings_order_by_key),
+                getString(R.string.settings_order_by_default)
+        );
+
+        Uri baseUri = Uri.parse(REQUEST_URL);
+        Uri.Builder uriBuilder = baseUri.buildUpon();
+
+        uriBuilder.appendQueryParameter("format", "json");
+        uriBuilder.appendQueryParameter("defName", defName);
+        uriBuilder.appendQueryParameter("orderby", orderBy);
+
+        return new NewsLoader(this, uriBuilder.toString());
     }
 
     @Override
@@ -85,5 +125,22 @@ public class NewsActivity extends AppCompatActivity
     @Override
     public void onLoaderReset(Loader<List<News>> loader) {
         mAdapter.clear();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_settings) {
+            Intent settingsIntent = new Intent(this, SettingsActivity.class);
+            startActivity(settingsIntent);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
