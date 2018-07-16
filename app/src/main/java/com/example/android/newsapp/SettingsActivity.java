@@ -42,10 +42,7 @@ public class SettingsActivity extends AppCompatActivity {
                     preference.setSummary(labels[prefIndex]);
                 }
             } else {
-                if (stringValue.equals(preference.toString())) {
-                    preference.setSummary(stringValue);
-                }
-
+                preference.setSummary(stringValue);
             }
             return true;
         }
